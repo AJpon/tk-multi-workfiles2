@@ -141,11 +141,12 @@ configuration:
                       It is a dictionary with the following keys: *entity_type* key to specify the child Entity
                       type to collect, *link_field* the Flow Production Tracking field name used to link the Entity to its parent,
                       *filters* a list of standard Flow Production Tracking API filters, *hierarchy* a list of fields defining
-                      the grouping in the sub-tree.
+                      the grouping in the sub-tree, and an optional *use_step_filter_on* boolean, false by default,
+                      described below.
                       The optional *step_filter_on* setting is an Entity type and can be used to restrict
                       the list of Steps used for filtering to only the Steps for the specified Entity type.
-                      It can be combined with *sub_hierarchy*, in which case it also restricts the Steps
-                      used for filtering the Tasks collected by the deferred query."
+                      In a tab with a *sub_hierarchy*, *step_filter_on* is ignored and the Steps are restricted
+                      to the tab's *entity_type*, unless *use_step_filter_on* is set to true in the *sub_hierarchy*."
 
         # For backward compatibility reasons we don't use the new deferred queries
         # by default. Using deferred queries, an Asset/Shot setup could be:

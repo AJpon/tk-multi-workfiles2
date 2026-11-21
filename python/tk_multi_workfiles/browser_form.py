@@ -271,12 +271,13 @@ class BrowserForm(QtGui.QWidget):
             if model.represents_tasks:
                 # If the model handles Tasks, either directly or from deferred
                 # queries, check if we can narrow down the list of Steps we
-                # display based on an Entity type. If the `step_filter_on`
-                # setting is set, use it, whether the model retrieves Tasks
-                # directly or from deferred queries. Otherwise, use the Entity
-                # type from the primary model. For example if we have
-                # "Shot" -> "Tasks" without `step_filter_on`, we only display
-                # Shot Steps.
+                # display based on an Entity type. For a model retrieving Tasks
+                # directly, the `step_filter_on` setting is used if set. For
+                # deferred queries, it is only used if the sub hierarchy sets
+                # `use_step_filter_on` to true, otherwise it was already
+                # replaced with the Entity type from the primary model. For
+                # example if we have "Shot" -> "Tasks", we only display Shot
+                # Steps by default.
                 step_entity_filter = step_filter_on or model.get_entity_type()
 
             entity_form = EntityTreeForm(

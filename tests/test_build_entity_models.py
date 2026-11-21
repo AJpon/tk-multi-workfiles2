@@ -91,21 +91,63 @@ class TestBuildEntityModels(Workfiles2TestBase):
         self._models.extend(model for _, _, model in result)
         return result
 
-    def test_step_filter_on_is_kept_with_sub_hierarchy(self) -> None:
+    def _with_opt_in(
+        self, value: Any, entity: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
-        step_filter_on must not be overwritten when a sub_hierarchy is set.
+        Return a copy of a tab with use_step_filter_on set in its sub_hierarchy.
+
+        :param value: The value of use_step_filter_on.
+        :param entity: The tab to copy, ASSET_TASKS_UNDER_SHOTS by default.
+        :returns: The new tab.
+        """
+        entity = dict(entity or ASSET_TASKS_UNDER_SHOTS)
+        entity["sub_hierarchy"] = dict(
+            entity["sub_hierarchy"], use_step_filter_on=value
+        )
+        return entity
+
+    def test_step_filter_on_is_overwritten_without_opt_in(self) -> None:
+        """
+        Without use_step_filter_on, step_filter_on is overwritten with the
+        entity type of the tab, as before.
         """
         ((_, step_filter_on, _),) = self._build([ASSET_TASKS_UNDER_SHOTS])
+        self.assertEqual(step_filter_on, "Shot")
+
+    def test_step_filter_on_is_overwritten_when_opt_in_is_false(self) -> None:
+        """
+        With use_step_filter_on set to false, step_filter_on is overwritten
+        with the entity type of the tab, as before.
+        """
+        ((_, step_filter_on, _),) = self._build([self._with_opt_in(False)])
+        self.assertEqual(step_filter_on, "Shot")
+
+    def test_step_filter_on_is_kept_when_opt_in_is_true(self) -> None:
+        """
+        With use_step_filter_on set to true, step_filter_on is kept.
+        """
+        ((_, step_filter_on, _),) = self._build([self._with_opt_in(True)])
         self.assertEqual(step_filter_on, "Asset")
 
-    def test_step_filter_on_is_unset_without_value(self) -> None:
+    def test_main_entity_type_is_used_when_opt_in_without_step_filter_on(
+        self,
+    ) -> None:
         """
-        Without step_filter_on, None is returned so that the caller falls
-        back to the entity type of the model. Check the effective value the
-        browser form uses.
+        With use_step_filter_on set to true but no step_filter_on, the browser
+        form falls back to the entity type of the model.
         """
-        entity = dict(ASSET_TASKS_UNDER_SHOTS)
+        entity = self._with_opt_in(True)
         del entity["step_filter_on"]
         ((_, step_filter_on, model),) = self._build([entity])
         self.assertIsNone(step_filter_on)
         self.assertEqual(step_filter_on or model.get_entity_type(), "Shot")
+
+    def test_opt_in_applies_per_tab(self) -> None:
+        """
+        use_step_filter_on only applies to the tab that sets it.
+        """
+        result = self._build([self._with_opt_in(True), ASSET_TASKS_UNDER_SHOTS])
+        self.assertEqual(
+            [step_filter_on for _, step_filter_on, _ in result], ["Asset", "Shot"]
+        )
